@@ -28,10 +28,8 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, ErrorResponse<
 		const status = exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
 
 		const curlCommand = this.generateCurl(request);
-		if (status === HttpStatus.BAD_REQUEST) {
-			response.setHeader('Content-Type', 'application/json');
-			response.removeHeader('Content-Disposition');
-		}
+		response.setHeader('Content-Type', 'application/json');
+		response.removeHeader('Content-Disposition');
 		let responses = {
 			statusCode: status,
 			message: exception.message,
