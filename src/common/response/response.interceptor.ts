@@ -38,7 +38,7 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, ErrorResponse<
 			curl: (APP_ENV ?? 'DEV') === 'DEV' ? curlCommand : undefined,
 		};
 		let exception_response = exception?.getResponse();
-		if (exception_response && typeof exception_response === 'object') {
+		if (exception_response && typeof exception_response === 'object' && (exception_response as any).error === 'Validation Failed') {
 			responses['curl'] = undefined;
 		}
 		response.status(status).json(responses);
