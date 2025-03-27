@@ -30,3 +30,6 @@ export const MINIO_PORT = process.env.MINIO_PORT as string;
 export const MINIO_ACCESS_KEY = process.env.MINIO_ACCESS_KEY as string;
 export const MINIO_SECRETKEY = process.env.MINIO_SECRETKEY as string;
 export const MINIO_BUCKET = process.env.MINIO_BUCKET as string;
+
+//socket
+export const SOCKET_HOST = process.env.SOCKET_HOST as string;

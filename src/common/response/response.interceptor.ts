@@ -3,6 +3,7 @@ import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import * as moment from 'moment';
 import { APP_ENV } from '../env/env.config';
+import { BaseResponseDto } from './response.type';
 
 export type ErrorResponse<T> = {
 	statusCode: number;
@@ -15,7 +16,7 @@ export type ErrorResponse<T> = {
 
 @Injectable()
 //prettier-ignore
-export class ResponseInterceptor<T> implements NestInterceptor<T, ErrorResponse<T>> {
+export class ErrorResponseInterceptor<T> implements NestInterceptor<T, ErrorResponse<T>> {
 	intercept(context: ExecutionContext, next: CallHandler): Observable<ErrorResponse<T>> {
 		return next.handle().pipe(catchError((err: HttpException) => throwError(() => this.errorHandler(err, context))));
 	}
@@ -30,7 +31,7 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, ErrorResponse<
 		const curlCommand = this.generateCurl(request);
 		response.setHeader('Content-Type', 'application/json');
 		response.removeHeader('Content-Disposition');
-		let responses = {
+		let responses: BaseResponseDto = {
 			statusCode: status,
 			message: exception.message,
 			timestamp: moment().toISOString(),
