@@ -13,11 +13,11 @@ export class GetListQueryDto {
 	@Type(() => Number)
 	@IsInt({ message: 'Page harus berupa angka' })
 	@Min(1, { message: 'Page minimal 1' })
-	page?: number;
+	page: number;
 
 	@IsNotEmpty()
 	@Type(() => Number)
 	@IsInt({ message: 'Limit harus berupa angka' })
 	@Min(1, { message: 'Limit minimal 1' })
-	limit?: number;
+	limit: number;
 }

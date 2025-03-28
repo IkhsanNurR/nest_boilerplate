@@ -35,7 +35,7 @@ export class ErrorResponseInterceptor<T> implements NestInterceptor<T, ErrorResp
 			statusCode: status,
 			message: exception.message,
 			timestamp: moment().toISOString(),
-			error: exception.getResponse(),
+			error: (APP_ENV ?? 'DEV') === 'DEV' ? exception.getResponse() : undefined,
 			curl: (APP_ENV ?? 'DEV') === 'DEV' ? curlCommand : undefined,
 		};
 		let exception_response = exception?.getResponse();

@@ -2,7 +2,7 @@ import { ExampleModule } from './example.module';
 
 export const exampleRoutes = [
 	{
-		path: 'example',
+		path: 'ex',
 		module: ExampleModule,
 	},
 ];

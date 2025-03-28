@@ -171,3 +171,15 @@ Berikut adalah daftar HTTP status codes yang tersedia dalam enum `HttpStatus` di
 * `HTTP_VERSION_NOT_SUPPORTED = 505`
 * `INSUFFICIENT_STORAGE = 507`
 * `LOOP_DETECTED = 508`
+
+
+## PRISMA ORM
+* Prisma tidak bisa enum menggunakan angka, hanya bisa string
+
+* langkah langkah menggunakan prisma
+- pastikan ada schema.prisma
+- jika belum maka run -> npx prisma init -> lalu ganti DATABASE_URL
+- selanjutnya run -> npx prisma db pull -> untuk pull schema semua tabel di database, definisikan di schema prisma ketika mau spesifik tabel. bisa multi schema dengan menggunakan array
+- jika ada error, perbaiki dlu 
+- selanjutnya run -> npx prisma generate -> ini akan generate semacam models prisma
+- selesai

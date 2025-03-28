@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { generatePDF } from 'src/common/file/generate_pdf';
 import { PostPDFDto } from './dto/get_pdf.dto';
 import { socket } from '@socket_service';
@@ -6,9 +6,14 @@ import socket_client from '@socket_client_service';
 import { DeleteResponseDto, GetByIdResponseDto, GetListResponseDto, PostResponseDto } from 'src/common/response/response.type';
 import { GetByIdParamDto, GetListQueryDto } from './dto/get_by_id.dto';
 import { DeleteByIdParamDto, DeleteByIdQueryDto } from './dto/delete.dto';
+import { PrismaService } from '@db_service';
+import { HTTP_STATUS_CODE } from 'src/common/response/http_status_code';
+import { CrudAddition } from '@crud_helper';
+
 @Injectable()
 export class ExampleService {
-	async postPDF(body: PostPDFDto): Promise<Buffer | object> {
+	constructor(private prisma: PrismaService) {}
+	async postPDF(request: Request, body: PostPDFDto): Promise<Buffer | object> {
 		try {
 			return await generatePDF({ html: body.html });
 		} catch (error) {
@@ -17,7 +22,7 @@ export class ExampleService {
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	async socketServer(body: any): Promise<PostResponseDto> {
+	async socketServer(request: Request, body: any): Promise<PostResponseDto> {
 		try {
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			console.log({ body });
@@ -25,7 +30,7 @@ export class ExampleService {
 			return {
 				data: null,
 				message: 'success',
-				statusCode: 200,
+				statusCode: HTTP_STATUS_CODE.CREATED,
 			};
 		} catch (error) {
 			throw error;
@@ -33,7 +38,7 @@ export class ExampleService {
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	async socketClient(body: any): Promise<PostResponseDto> {
+	async socketClient(request: Request, body: any): Promise<PostResponseDto> {
 		try {
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			console.log({ body });
@@ -41,7 +46,7 @@ export class ExampleService {
 			return {
 				data: null,
 				message: 'success',
-				statusCode: 200,
+				statusCode: HTTP_STATUS_CODE.CREATED,
 			};
 		} catch (error) {
 			throw error;
@@ -50,12 +55,14 @@ export class ExampleService {
 
 	async getByIdParam(param: GetByIdParamDto): Promise<GetByIdResponseDto> {
 		try {
+			const find = await this.prisma.list_cetak_rekonsil.findFirst({ where: { AND: { id_cetak_rekonsil: param.id, deletedAt: { not: null } } } });
+			if (!find) {
+				throw new NotFoundException('Data tidak ditemukan!');
+			}
+
 			return {
-				statusCode: 200,
-				data: {
-					test: 'test',
-					id: param.id,
-				},
+				statusCode: HTTP_STATUS_CODE.OK,
+				data: find,
 				message: 'success',
 			};
 		} catch (error) {
@@ -65,29 +72,51 @@ export class ExampleService {
 
 	async getByListQuery(query: GetListQueryDto): Promise<GetListResponseDto> {
 		try {
+			const offset = (query.page - 1) * query.limit;
+			const [find, totalCountResult] = await Promise.all([
+				this.prisma.executeSelectQuery<[]>(`SELECT * FROM list_cetak_rekonsil LIMIT ${query.limit} OFFSET ${offset}`),
+				this.prisma.executeSelectOneQuery<{ count: number }>(`SELECT COUNT(*) FROM list_cetak_rekonsil`),
+			]);
+
 			return {
-				statusCode: 200,
-				data: [],
+				statusCode: HTTP_STATUS_CODE.OK,
+				data: find,
 				message: 'success',
 				meta_data: {
-					limit: query.limit as number,
-					page: query.page as number,
-					total: 10,
+					limit: query.limit,
+					page: query.page,
+					total: Number(totalCountResult.count),
 				},
 			};
 		} catch (error) {
+			console.log(error);
 			throw error;
 		}
 	}
 
-	async deleteByIdParam(param: DeleteByIdParamDto): Promise<DeleteResponseDto> {
+	async deleteByIdParam(request: Request, param: DeleteByIdParamDto): Promise<DeleteResponseDto> {
 		try {
-			return {
-				statusCode: 200,
-				data: {
-					test: 'test',
-					id: param.id,
+			const find = await this.prisma.list_cetak_rekonsil.findFirst({ where: { AND: { id_cetak_rekonsil: param.id, deletedAt: null } } });
+			console.log({ find });
+			if (!find) {
+				throw new NotFoundException('Data tidak ditemukan!');
+			}
+
+			const result = await this.prisma.list_cetak_rekonsil.update({
+				where: {
+					id_cetak_rekonsil_createdAt: {
+						id_cetak_rekonsil: param.id,
+						createdAt: find.createdAt,
+					},
 				},
+				data: {
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					...CrudAddition.helper_delete(request as any),
+				},
+			});
+			return {
+				statusCode: HTTP_STATUS_CODE.OK,
+				data: result,
 				message: 'success',
 			};
 		} catch (error) {
@@ -95,14 +124,28 @@ export class ExampleService {
 		}
 	}
 
-	async deleteByQuery(query: DeleteByIdQueryDto): Promise<DeleteResponseDto> {
+	async deleteByQuery(request: Request, query: DeleteByIdQueryDto): Promise<DeleteResponseDto> {
 		try {
-			return {
-				statusCode: 200,
-				data: {
-					test: 'test',
-					id: query.id,
+			const find = await this.prisma.list_cetak_rekonsil.findFirst({ where: { AND: { id_cetak_rekonsil: query.id, deletedAt: null } } });
+			if (!find) {
+				throw new NotFoundException('Data tidak ditemukan!');
+			}
+
+			const result = await this.prisma.list_cetak_rekonsil.update({
+				where: {
+					id_cetak_rekonsil_createdAt: {
+						id_cetak_rekonsil: query.id,
+						createdAt: find.createdAt,
+					},
 				},
+				data: {
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					...CrudAddition.helper_delete(request as any),
+				},
+			});
+			return {
+				statusCode: HTTP_STATUS_CODE.OK,
+				data: result,
 				message: 'success',
 			};
 		} catch (error) {

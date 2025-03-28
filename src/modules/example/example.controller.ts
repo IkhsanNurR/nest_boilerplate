@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Header, HttpStatus, Param, Post, Query, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Header, HttpStatus, Param, Post, Query, Req, Res } from '@nestjs/common';
 import { ExampleService } from './example.service';
 import { Response } from 'express';
 import { PostPDFDto } from './dto/get_pdf.dto';
@@ -13,9 +13,9 @@ export class ExampleController {
 	@Post('/pdf')
 	@Header('Content-Type', 'application/pdf') // Set header Content-Type
 	@Header('Content-Disposition', 'attachment; filename=laporan.pdf') // Set header untuk download
-	async postPDF(@Body() body: PostPDFDto, @Res() res: Response): Promise<void> {
+	async postPDF(@Req() req: Request, @Body() body: PostPDFDto, @Res() res: Response): Promise<void> {
 		try {
-			const buffer = await this.exampleService.postPDF(body);
+			const buffer = await this.exampleService.postPDF(req, body);
 
 			if (Buffer.isBuffer(buffer)) {
 				res.setHeader('Content-Length', buffer.length); // Set ukuran file
@@ -29,9 +29,9 @@ export class ExampleController {
 	}
 
 	@Post('/socket-server')
-	async socketServer(@Body() body: any): Promise<PostResponseDto> {
+	async socketServer(@Req() req: Request, @Body() body: any): Promise<PostResponseDto> {
 		try {
-			const res: PostResponseDto = await this.exampleService.socketServer(body);
+			const res: PostResponseDto = await this.exampleService.socketServer(req, body);
 			return res;
 		} catch (error) {
 			console.log(error);
@@ -40,9 +40,9 @@ export class ExampleController {
 	}
 
 	@Post('/socket-client')
-	async socketClient(@Body() body: any): Promise<PostResponseDto> {
+	async socketClient(@Req() req: Request, @Body() body: any): Promise<PostResponseDto> {
 		try {
-			const res: PostResponseDto = await this.exampleService.socketClient(body);
+			const res: PostResponseDto = await this.exampleService.socketClient(req, body);
 			return res;
 		} catch (error) {
 			console.log(error);
@@ -53,7 +53,6 @@ export class ExampleController {
 	@Get('/get-by-id/:id')
 	async getById(@Param() params: GetByIdParamDto): Promise<GetByIdResponseDto> {
 		try {
-			console.log({ params });
 			const res: GetByIdResponseDto = await this.exampleService.getByIdParam(params);
 			return res;
 		} catch (error) {
@@ -65,7 +64,6 @@ export class ExampleController {
 	@Get('/list-filter')
 	async getList(@Query() query: GetListQueryDto): Promise<GetListResponseDto> {
 		try {
-			console.log({ query });
 			const res: GetListResponseDto = await this.exampleService.getByListQuery(query);
 			return res;
 		} catch (error) {
@@ -75,10 +73,9 @@ export class ExampleController {
 	}
 
 	@Delete('/delete/:id')
-	async deleteById(@Param() params: DeleteByIdParamDto): Promise<DeleteResponseDto> {
+	async deleteById(@Req() req: Request, @Param() params: DeleteByIdParamDto): Promise<DeleteResponseDto> {
 		try {
-			console.log({ params });
-			const res: DeleteResponseDto = await this.exampleService.deleteByIdParam(params);
+			const res: DeleteResponseDto = await this.exampleService.deleteByIdParam(req, params);
 			return res;
 		} catch (error) {
 			console.log(error);
@@ -86,10 +83,10 @@ export class ExampleController {
 		}
 	}
 
-	async deleteByQuery(@Query() query: DeleteByIdQueryDto): Promise<DeleteResponseDto> {
+	@Delete('/delete-query')
+	async deleteByQuery(@Req() req: Request, @Query() query: DeleteByIdQueryDto): Promise<DeleteResponseDto> {
 		try {
-			console.log({ query });
-			const res: DeleteResponseDto = await this.exampleService.deleteByQuery(query);
+			const res: DeleteResponseDto = await this.exampleService.deleteByQuery(req, query);
 			return res;
 		} catch (error) {
 			console.log(error);

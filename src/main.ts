@@ -15,6 +15,7 @@ import * as REDIS_STORE from 'connect-redis';
 import getSocketWebInstance from './config/socket';
 import * as HTTP from 'http';
 import { AutoStatusInterceptor } from './common/response/auto_status_response.interceptor';
+import { IpInterceptor } from './common/middlewares/ip.middlewares';
 
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule);
@@ -56,6 +57,7 @@ async function bootstrap() {
 	);
 
 	// Global Interceptor untuk format response error
+	app.useGlobalInterceptors(new IpInterceptor());
 	app.useGlobalInterceptors(new ErrorResponseInterceptor());
 	app.useGlobalInterceptors(new AutoStatusInterceptor());
 	app.useGlobalInterceptors(new LoggingInterceptor());
